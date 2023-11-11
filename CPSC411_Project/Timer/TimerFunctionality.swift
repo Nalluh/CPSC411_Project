@@ -1,6 +1,6 @@
 import Foundation
 
-extension ContentView{
+extension TimerView{
     final class ViewModel: ObservableObject{
         @Published var isRunning = false
         @Published var activeAlert = false
