@@ -1,10 +1,10 @@
 import Foundation
 
-extension ContentView{
+extension TimerView{
     final class ViewModel: ObservableObject{
         @Published var isRunning = false
         @Published var activeAlert = false
-        @Published var timer: String = "5:00"
+        @Published var timer: String
         @Published var mins: Float = 0.01{
             didSet{// when value for mins is updated
                   // format the time for timer variable
@@ -16,7 +16,16 @@ extension ContentView{
         
         private var startTime = 0;
         private var endingDate = Date();
-
+        
+        init(initialTimerValue: String = "5:00") {
+                   self.timer = initialTimerValue
+               }
+    
+        func setTimer(userTimer:String)
+        {
+            self.timer = userTimer
+        }
+        
         
         // when timer is started
         func startTimer(mins:Float){
