@@ -6,7 +6,14 @@
 //
 import SwiftUI
 
-import SwiftUI
+struct FlashCard {
+    var title: String
+    var description: String
+}
+
+class FlashCardData: ObservableObject {
+    @Published var flashcards: [String: String] = [:]
+}
 //not used for now
 struct OnboardingView: View {
     @State private var name = ""
@@ -107,21 +114,100 @@ struct MenuOptions: View{
     }
 }
 
-
+//work on user submitting topic name then add flash card title and desc
 struct FlashCardView: View {
+    @State private var newFlashcardTitle: String = ""
+    @State private var newFlashcardDesc: String = ""
+    @State private var isCreatingNewFlashcard: Bool = false
+    @State private var flashcards: [String: String] = [:]
+    @ObservedObject var flashCardData: FlashCardData = FlashCardData()
+    
+ 
+    
     var body: some View {
-        Text("Edit code here")
+            
+      
+     
+        if( !isCreatingNewFlashcard && flashCardData.flashcards.isEmpty) {
+                
+                Section(header: Text("Flashcards")){
+                    Spacer()
+                    Button(action: {
+                        isCreatingNewFlashcard.toggle()
+                    }) {
+                        Text("Add Collection")
+                            .buttonStyle(.borderedProminent)
+                    }
+                }
+                Spacer()
+            }
+            
+        
+        else {
+            Section(header: Text("New Flashcard")){
+                VStack{
+                    TextField("Enter Flashcard Title", text: $newFlashcardTitle)
+                }
+                .textFieldStyle(.roundedBorder)
+                .padding()
+                
+                Button(action: {
+                    flashCardData.flashcards[newFlashcardTitle] = newFlashcardDesc
+                    newFlashcardTitle = ""
+                    newFlashcardDesc = ""
+                    }) {
+                    Text("Submit")
+                    .buttonStyle(.borderedProminent)
+                        }
+                    .padding()
+                List {
+                    ForEach(flashCardData.flashcards.sorted(by: <), id: \.key) { key, value in
+                        NavigationLink(destination: FlashCardDetailView(flashcard: FlashCard(title: key, description: value), flashCardData: flashCardData)) {
+                                Text(key)
+                                        }
+                                    }
+                                }
+                                .padding()
+                            }
+                           // .navigationTitle("Flashcards")
+            }
+        }
+    }
+
+
+struct FlashCardDetailView: View {
+    var flashcard: FlashCard
+    @ObservedObject var flashCardData: FlashCardData
+    var body: some View {
+        VStack {
+            Text("Flashcard Detail")
+                .font(.title)
+
+            Text("Title: \(flashcard.title)")
+                .padding()
+
+            Text("Description: \(flashcard.description)")
+                .padding()
+
+            // Add more views for additional information or details
+        }
     }
 }
+
+
+// add ability to allow user to view flash cards when start button is pressed
+// pass flashcards to timer to view
 struct TimerView: View {
 
     @StateObject private var vm = ViewModel()
+    var viewFC:Bool = false
     //refreshes timer every 1 second
     // starts automatically
     private let  timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     //for ui
     private let width: Double = 250
   
+    @State private var clickOnX: Bool = false
 
     var body: some View {
         NavigationView {
@@ -160,6 +246,7 @@ struct TimerView: View {
                         //button to start timer
                         Button("Start"){
                             vm.startTimer(mins: vm.mins)
+                            clickOnX = true
                         }
                         .disabled(vm.activeAlert)
                         
@@ -167,7 +254,9 @@ struct TimerView: View {
                         Button("Reset", action: vm.reset)
                             .tint(.red)
                     }.frame(width:width)
-                    
+                    NavigationLink(destination:  FlashCardView(), isActive: $clickOnX) {
+
+                    }.hidden()
                 }
                 .onReceive(timer) { _ in
                     vm.updateTimer()
