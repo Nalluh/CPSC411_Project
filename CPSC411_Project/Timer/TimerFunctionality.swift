@@ -5,7 +5,7 @@ extension TimerView{
         @Published var isRunning = false
         @Published var activeAlert = false
         @Published var timer: String
-        @Published var mins: Float = 0.01{
+        @Published var mins: Float =  0{
             didSet{// when value for mins is updated
                   // format the time for timer variable
                 self.timer = "\(Int(mins)):00"
@@ -17,7 +17,7 @@ extension TimerView{
         private var startTime = 0;
         private var endingDate = Date();
         
-        init(initialTimerValue: String = "5:00") {
+        init(initialTimerValue: String = "0:00") {
                    self.timer = initialTimerValue
                }
     

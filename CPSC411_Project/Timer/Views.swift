@@ -12,8 +12,12 @@ struct FlashCard {
 }
 
 class FlashCardData: ObservableObject {
-    @Published var flashcards: [String: String] = [:]
+    @Published var flashcards: [String] = []
+    @Published var flashcardsInfo: [String:String] = [:]
+    @Published var flashView: [String : [String:String]] = [:]
+    
 }
+
 //not used for now
 struct OnboardingView: View {
     @State private var name = ""
@@ -55,6 +59,7 @@ struct MenuOptions: View{
     var goal: String
     @State  var clickOnTimer: Bool = false
     @State  var clickOnFlashCard: Bool = false
+    @State private var flashCardData: FlashCardData = FlashCardData()
     var body: some View {
       
         NavigationView {
@@ -76,14 +81,14 @@ struct MenuOptions: View{
                     //so the view switches
                     clickOnTimer = true
                 }) {
-                    Text("Enter Study Area")
+                    Text("Study Area")
                         .padding(12)
                         .background(Color.blue)
                         .foregroundColor(Color.white)
                         .cornerRadius(15)
                 }
                 .padding(12)
-                NavigationLink(destination:  TimerView(), isActive: $clickOnTimer) {
+            NavigationLink(destination: TimerView(flashCardData: flashCardData), isActive: $clickOnTimer) {
 
                 }.hidden()
             // end timer block
@@ -93,14 +98,14 @@ struct MenuOptions: View{
               
                 clickOnFlashCard = true
             }) {
-                Text("Enter Flash Cards Area")
+                Text("Create FlashCards")
                     .padding(12)
                     .background(Color.blue)
                     .foregroundColor(Color.white)
                     .cornerRadius(15)
             }
             .padding(12)
-            NavigationLink(destination:  FlashCardView(), isActive: $clickOnFlashCard) {
+            NavigationLink(destination: FlashCardView(flashCardData: flashCardData), isActive: $clickOnFlashCard) {
 
             }.hidden()
             //end flash card block
@@ -119,7 +124,7 @@ struct FlashCardView: View {
     @State private var newFlashcardTitle: String = ""
     @State private var newFlashcardDesc: String = ""
     @State private var isCreatingNewFlashcard: Bool = false
-    @State private var flashcards: [String: String] = [:]
+    @State private var flashcards: [String] = []
     @ObservedObject var flashCardData: FlashCardData = FlashCardData()
     
  
@@ -152,18 +157,21 @@ struct FlashCardView: View {
                 .padding()
                 
                 Button(action: {
-                    flashCardData.flashcards[newFlashcardTitle] = newFlashcardDesc
+                    var newFlashcardTitle = self.newFlashcardTitle
+
+                                flashCardData.flashcards.append(newFlashcardTitle)
+                                flashCardData.flashView[newFlashcardTitle] = [:]
+
                     newFlashcardTitle = ""
-                    newFlashcardDesc = ""
                     }) {
                     Text("Submit")
                     .buttonStyle(.borderedProminent)
                         }
                     .padding()
                 List {
-                    ForEach(flashCardData.flashcards.sorted(by: <), id: \.key) { key, value in
-                        NavigationLink(destination: FlashCardDetailView(flashcard: FlashCard(title: key, description: value), flashCardData: flashCardData)) {
-                                Text(key)
+                    ForEach(flashCardData.flashcards.indices, id: \.self) { index in
+                    NavigationLink(destination: FlashCardDetailView(flashCardData: flashCardData, flashcardIndex: index)) {
+                          Text(flashCardData.flashcards[index])
                                         }
                                     }
                                 }
@@ -175,24 +183,87 @@ struct FlashCardView: View {
     }
 
 
+
 struct FlashCardDetailView: View {
-    var flashcard: FlashCard
     @ObservedObject var flashCardData: FlashCardData
+    @State private var newQuestion: String = ""
+    @State private var newAnswer: String = ""
+    var flashcardIndex: Int
+
     var body: some View {
         VStack {
             Text("Flashcard Detail")
                 .font(.title)
 
-            Text("Title: \(flashcard.title)")
+            Text("Title: \(flashCardData.flashcards[flashcardIndex])")
                 .padding()
 
-            Text("Description: \(flashcard.description)")
+            TextField("Enter Flashcard Description", text: $flashCardData.flashcards[flashcardIndex])
+                .textFieldStyle(.roundedBorder)
                 .padding()
 
-            // Add more views for additional information or details
+            if flashCardData.flashcards.count  != 0 {
+                HStack {
+                    Text("Question")
+                    Spacer()
+                    Text("Answer")
+                }
+                .font(.subheadline)
+                .padding()
+            }
+
+            
+              
+           
+                     if let cards = flashCardData.flashView[flashCardData.flashcards[flashcardIndex]] {
+            
+                             ForEach(cards.sorted(by: { $0.0 < $1.0 }), id: \.key) { key, value in
+                                 HStack {
+                                     Text(key)
+                                     Spacer()
+                                     Text(value)
+                                 }
+                             }
+                         
+                     }
+                
+            
+        }.padding()
+
+        VStack {
+            HStack {
+                TextField("Enter Question", text: $newQuestion)
+                    .textFieldStyle(.roundedBorder)
+                    .padding()
+
+                TextField("Enter Answer", text: $newAnswer)
+                    .textFieldStyle(.roundedBorder)
+                    .padding()
+
+                Button(action: {
+                    flashCardData.flashView[flashCardData.flashcards[flashcardIndex]]?.updateValue(newAnswer, forKey: newQuestion)
+                    
+                    
+                    print(flashCardData.flashView.count)
+                        newQuestion = ""
+                        newAnswer = ""
+                }) {
+                    Text("Add")
+                        .buttonStyle(.borderedProminent)
+                }
+                .padding()
+            }
+
+            
+
+            Spacer()
         }
+        .padding()
     }
 }
+
+
+
 
 
 // add ability to allow user to view flash cards when start button is pressed
@@ -200,6 +271,7 @@ struct FlashCardDetailView: View {
 struct TimerView: View {
 
     @StateObject private var vm = ViewModel()
+    @ObservedObject var flashCardData: FlashCardData = FlashCardData()
     var viewFC:Bool = false
     //refreshes timer every 1 second
     // starts automatically
@@ -210,7 +282,7 @@ struct TimerView: View {
     @State private var clickOnX: Bool = false
 
     var body: some View {
-        NavigationView {
+        
             VStack{
                 
                 VStack{
@@ -236,7 +308,7 @@ struct TimerView: View {
                     
                     // change value to something not zero
                     // zero is used for testing
-                    Slider(value:$vm.mins, in: 0...10, step:1)
+                    Slider(value:$vm.mins, in: 0...60, step:1)
                         .padding()
                         .frame(width:width)
                         .disabled(vm.activeAlert)
@@ -254,20 +326,77 @@ struct TimerView: View {
                         Button("Reset", action: vm.reset)
                             .tint(.red)
                     }.frame(width:width)
-                    NavigationLink(destination:  FlashCardView(), isActive: $clickOnX) {
-
-                    }.hidden()
+                    NavigationLink(destination: Flashcards(flashCardData: flashCardData), isActive: $clickOnX) {
+                                           
+                                        }.hidden()
                 }
                 .onReceive(timer) { _ in
                     vm.updateTimer()
               
-                }
+                
             }
         }//.navigationBarBackButtonHidden(true)
     }
 }
 
+struct Flashcards: View {
+    @State private var newFlashcardTitle: String = ""
+    @State private var isCreatingNewFlashcard: Bool = false
+    @State private var flashcards: [String] = []
+    @ObservedObject var flashCardData: FlashCardData = FlashCardData()
+    
+ 
+    
+    var body: some View {
+            
+        
+                List {
+                    ForEach(flashCardData.flashcards.indices, id: \.self) { index in
+                    NavigationLink(destination: FlashCardDetailViewNoEdit(flashCardData: flashCardData, flashcardIndex: index)) {
+                          Text(flashCardData.flashcards[index])
+                                        }
+                                    }
+                                }
+                                .padding()
+                                .navigationTitle("Sets")
+                            }
+      
+            }
+        
+struct FlashCardDetailViewNoEdit: View {
+    @ObservedObject var flashCardData: FlashCardData
+    @State private var newQuestion: String = ""
+    @State private var newAnswer: String = ""
+    var flashcardIndex: Int
 
+    var body: some View {
+        VStack {
+            HStack {
+                Text("Question")
+               Text("         ")
+                Text("Answer")
+            }
+            if let cards = flashCardData.flashView[flashCardData.flashcards[flashcardIndex]] {
+                VStack(alignment: .leading, spacing: 10) {
+                            ForEach(cards.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text("\(key)         \(value)")
+                                        .font(.headline)
+                                        .foregroundColor(.blue)
+
+                                  
+                                }
+                                .padding(10)
+                                .border(Color.gray, width: 2)
+                              
+                            }
+                        }
+                        .padding()
+            }
+
+        }.navigationTitle("Flashcards")
+    }
+}
 struct Previews_onboard_Previews: PreviewProvider {
     static var previews: some View {
         /*@START_MENU_TOKEN@*/Text("Hello, World!")/*@END_MENU_TOKEN@*/
