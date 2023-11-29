@@ -8,7 +8,7 @@ struct ContentView: View {
     @State  var isFormValid: Bool = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Text("Welcome to StudyBuddy!")
                     .padding(10)
@@ -46,10 +46,12 @@ struct ContentView: View {
                 }
                 .disabled(!isFormValid)
                 .padding(12)
-                NavigationLink(destination:  MenuOptions(name:$name,goal:$goal), isActive: $isSignedIn) {
-                    
-                }
-                .hidden()
+                .navigationDestination(
+                    isPresented:  $isSignedIn) {
+                        MenuOptions(name: $name, goal: $goal)
+                        Text("")
+                            .hidden()
+                    }
             }
             .preferredColorScheme(nightMode ? .dark : .light)
             .toolbar {
