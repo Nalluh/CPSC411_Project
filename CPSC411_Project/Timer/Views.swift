@@ -55,67 +55,161 @@ struct OnboardingView: View {
 //not used for now
 
 struct MenuOptions: View{
-    var name: String
-    var goal: String
+    @Binding var name: String
+    @Binding var goal: String
     @State  var clickOnTimer: Bool = false
     @State  var clickOnFlashCard: Bool = false
     @State private var flashCardData: FlashCardData = FlashCardData()
-    var body: some View {
-      
-        NavigationView {
-        VStack{
-            Text("Welcome. \(name)")
-                .padding()
-                .font(.custom("AppleSDGothicNeo-Bold", size: 16))
-            Text("Dont forget the goal:")
-                .font(.custom("AppleSDGothicNeo-Bold", size: 16))
-            Text(goal)
-                .padding(-1)
-                .font(.custom("AppleSDGothicNeo-Bold", size: 24))
-                .bold()
-            
-            //this block links to timer
-                Button(action: {
-                    //when button is clicked variable is set to true
-                    //which makes the condition on NavigationLink become true
-                    //so the view switches
-                    clickOnTimer = true
-                }) {
-                    Text("Study Area")
-                        .padding(12)
-                        .background(Color.blue)
-                        .foregroundColor(Color.white)
-                        .cornerRadius(15)
-                }
-                .padding(12)
-            NavigationLink(destination: TimerView(flashCardData: flashCardData), isActive: $clickOnTimer) {
-
-                }.hidden()
-            // end timer block
-            
-            // This block is for flash cards
-            Button(action: {
-              
-                clickOnFlashCard = true
-            }) {
-                Text("Create FlashCards")
-                    .padding(12)
-                    .background(Color.blue)
-                    .foregroundColor(Color.white)
-                    .cornerRadius(15)
-            }
-            .padding(12)
-            NavigationLink(destination: FlashCardView(flashCardData: flashCardData), isActive: $clickOnFlashCard) {
-
-            }.hidden()
-            //end flash card block
-        }
+    @State private var selectedTab = 0
+    @AppStorage("nightMode") private var nightMode = false
     
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            NavigationView {
+                VStack{
+                    Text("Welcome. \(name)")
+                        .padding()
+                        .font(.custom("AppleSDGothicNeo-Bold", size: 16))
+                    Text("Dont forget the goal:")
+                        .font(.custom("AppleSDGothicNeo-Bold", size: 16))
+                    Text(goal)
+                        .padding(-1)
+                        .font(.custom("AppleSDGothicNeo-Bold", size: 24))
+                        .bold()
+                    
+                    //this block links to timer
+                    Button(action: {
+                        //when button is clicked variable is set to true
+                        //which makes the condition on NavigationLink become true
+                        //so the view switches
+                        clickOnTimer = true
+                    }) {
+                        Text("Study Area")
+                            .padding(12)
+                            .background(Color.blue)
+                            .foregroundColor(Color.white)
+                            .cornerRadius(15)
+                    }
+                    .padding(12)
+                    NavigationLink(destination: TimerView(flashCardData: flashCardData), isActive: $clickOnTimer) {
+                        
+                    }.hidden()
+                    // end timer block
+                    
+                    // This block is for flash cards
+                    Button(action: {
+                        
+                        clickOnFlashCard = true
+                    }) {
+                        Text("Create FlashCards")
+                            .padding(12)
+                            .background(Color.blue)
+                            .foregroundColor(Color.white)
+                            .cornerRadius(15)
+                    }
+                    .padding(12)
+                    NavigationLink(destination: FlashCardView(flashCardData: flashCardData), isActive: $clickOnFlashCard) {
+                        
+                    }.hidden()
+                    //end flash card block
+                    
+                    
+                    
+                    
+                }.navigationBarBackButtonHidden(true)
+                // if buttons looks ugly change this
+                    .buttonStyle(.borderedProminent)
+            }
+            .tabItem {
+                Label("Home", systemImage: "book.closed.fill")
+            }
+            .tag(0)
             
-            
-        }.navigationBarBackButtonHidden(true)
-        // if buttons looks ugly change this
-         .buttonStyle(.borderedProminent)
+            SettingsView(nightMode: $nightMode, name: $name, goal: $goal)
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
+                .tag(1)
+        }
+        .navigationBarTitle("")
+        .navigationBarHidden(true)
+    }
+        
+}
+
+struct SettingsView: View {
+    @Binding var nightMode: Bool
+    @Binding var name: String
+    @Binding var goal: String
+    @State private var newName: String = ""
+    @State private var newGoal: String = ""
+    @State private var showUpdateSuccess: Bool = false
+    
+    var body: some View {
+        NavigationView {
+            VStack(alignment: .leading) {
+                Text("Settings")
+                    .font(.largeTitle)
+                    .padding(.top, 20)
+                    .padding(.leading, 20)
+                
+                Toggle("Night Mode", isOn: $nightMode)
+                    .padding()
+                
+                SettingsTextField(placeholder: "Change Name",
+                    text: $newName, nightMode: nightMode)
+                .padding()
+                
+                SettingsTextField(placeholder: "Change Goal",
+                    text: $newGoal, nightMode: nightMode)
+                    .padding()
+                HStack {
+                    Spacer()
+                    Button("Update") {
+                        if !newName.isEmpty {
+                            self.name = self.newName
+                            self.newName = ""
+                            self.showUpdateSuccess = true
+                        }
+                        if !newGoal.isEmpty {
+                            self.goal = self.newGoal
+                            self.newGoal = ""
+                            self.showUpdateSuccess = true
+                        }
+                    }
+                }
+                .padding()
+                
+                Spacer()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .alert(isPresented: $showUpdateSuccess) {
+                Alert(title: Text("Update Successful"), message: Text("Change has been made!"), dismissButton: .default(Text("OK")))
+            }
+        }
+    }
+}
+
+struct SettingsTextField: View {
+    var placeholder: String
+    @Binding var text: String
+    var nightMode: Bool
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            if text.isEmpty {
+                Text(placeholder)
+                    .foregroundColor(nightMode ? Color.gray : Color.primary.opacity(0.5)) // Adjust the color and opacity
+                    .padding(.horizontal, 12)
+                    .frame(height: 42)
+            }
+
+            TextField("", text: $text)
+                .foregroundColor(nightMode ? Color.primary : Color.primary) // Change the TextField text color
+                .padding(.horizontal, 12)
+                .frame(height: 42)
+        }
+        .background(RoundedRectangle(cornerRadius: 5).stroke(Color.primary))
     }
 }
 
@@ -351,13 +445,13 @@ struct InputFieldView: View {
               .frame(height: 42)
               .overlay(
                 RoundedRectangle(cornerSize: CGSize(width: 4, height: 4))
-                    .stroke(Color.gray, lineWidth: 1)
+                    .stroke(Color.teal, lineWidth: 1)
               )
             HStack {                    // HStack for the text
               Text(title ?? "Input")
                 .font(.headline)
                 .fontWeight(.thin)      // making the text small
-                .foregroundColor(Color.gray)    // and gray
+                .foregroundColor(Color.mint)    // and teal
                 .multilineTextAlignment(.leading)
                 .padding(4)
                 .background(nightMode ? Color.black : Color.white)     // adding some white background

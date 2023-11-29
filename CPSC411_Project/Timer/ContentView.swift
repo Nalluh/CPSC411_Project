@@ -46,7 +46,7 @@ struct ContentView: View {
                 }
                 .disabled(!isFormValid)
                 .padding(12)
-                NavigationLink(destination:  MenuOptions(name:name,goal:goal), isActive: $isSignedIn) {
+                NavigationLink(destination:  MenuOptions(name:$name,goal:$goal), isActive: $isSignedIn) {
                     
                 }
                 .hidden()
