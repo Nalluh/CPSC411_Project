@@ -17,7 +17,7 @@ struct ContentView: View {
                     .cornerRadius(2)
                     .background(nightMode ? Color.black : Color.white)
                     .padding(80)
-                Text("Please fill infomation below")
+                Text("Please fill infomation below:")
                 InputFieldView(data: $name, title: "Name")
                     .onChange(of: name) { newValue in
                             validateForm()

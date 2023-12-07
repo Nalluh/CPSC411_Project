@@ -85,6 +85,7 @@ struct MenuOptions: View{
                         clickOnTimer = true
                     }) {
                         Text("Study Area")
+                            .frame(width: 150, height: 20)
                             .padding(12)
                             .background(Color.blue)
                             .foregroundColor(Color.white)
@@ -101,7 +102,8 @@ struct MenuOptions: View{
                         
                         clickOnFlashCard = true
                     }) {
-                        Text("Create FlashCards")
+                        Text("Create Flashcards")
+                            .frame(width: 150, height: 20)
                             .padding(12)
                             .background(Color.blue)
                             .foregroundColor(Color.white)
@@ -382,7 +384,7 @@ struct TimerView: View {
                 VStack{
                     //Sets default of 5 mins
                     // can be changed in timerfunctionality
-                
+                    
                     Text("\(vm.timer)")
                         .font(.system(size: 70, weight: .medium,design: .rounded))
                         .padding()
@@ -407,19 +409,46 @@ struct TimerView: View {
                         .frame(width:width)
                         .disabled(vm.activeAlert)
                         .animation(.easeInOut, value: vm.mins)
-                    
+                        .tint(.gray)
+                    VStack{
                     HStack(spacing: 50){
                         //button to start timer
+                          
                         Button("Start"){
-                            vm.startTimer(mins: vm.mins)
-                            clickOnX = true
-                        }
+                          
+                            if(!flashCardData.flashcards.isEmpty && !vm.isRunning){
+                                
+                                clickOnX = true
+                                vm.startTimer(mins: vm.mins)
+                            }
+                            else{
+                                vm.startTimer(mins: vm.mins)
+
+                            }
+                        }.tint(.green)
                         .disabled(vm.activeAlert)
                         
                         //button to end timer
                         Button("Reset", action: vm.reset)
                             .tint(.red)
                     }.frame(width:width)
+                            .padding()
+                        if(vm.isRunning)
+                        {
+                            if(flashCardData.flashcards.count < 2){
+                                Button("View Flashcard"){
+                                    
+                                    clickOnX = true
+                                }
+                            }
+                           else{
+                                Button("View Flashcards"){
+                                
+                                clickOnX = true
+                            }
+                        }
+                        }
+                }
                     NavigationLink(destination: Flashcards(flashCardData: flashCardData), isActive: $clickOnX) {
                                            
                                         }.hidden()
@@ -488,38 +517,52 @@ struct Flashcards: View {
         
 struct FlashCardDetailViewNoEdit: View {
     @ObservedObject var flashCardData: FlashCardData
-    @State private var newQuestion: String = ""
-    @State private var newAnswer: String = ""
-    var flashcardIndex: Int
-
+    var flashcardIndex: Int = 0
+    @State private var flippedKeys: Set<String> = []
     var body: some View {
-        VStack {
-            HStack {
-                Text("Question")
-               Text("         ")
-                Text("Answer")
-            }
             if let cards = flashCardData.flashView[flashCardData.flashcards[flashcardIndex]] {
+                Text(flashCardData.flashcards[flashcardIndex])
+               
                 VStack(alignment: .leading, spacing: 10) {
-                            ForEach(cards.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Text("\(key)         \(value)")
-                                        .font(.headline)
-                                        .foregroundColor(.blue)
-
-                                  
-                                }
-                                .padding(10)
-                                .border(Color.gray, width: 2)
-                              
+                    ForEach(cards.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
+                        VStack(alignment: .leading, spacing: 5) {
+                            HStack {
+                                Text(flippedKeys.contains(key) ? value : key)
+                                    .font(.headline)
+                                    .foregroundColor(.blue)
+                                    .rotation3DEffect(
+                                        .degrees(flippedKeys.contains(key) ? 360 : 0),
+                                        axis: (x: 0.0, y: 1.0, z: 0.0)
+                                    )
+                                    .onTapGesture {
+                                        withAnimation {
+                                            if flippedKeys.contains(key) {
+                                                flippedKeys.remove(key)
+                                            } else {
+                                                flippedKeys.insert(key)
+                                            }
+                                        }
+                                    }
                             }
+                            .frame(maxWidth: .infinity, alignment: .center) // Use .infinity for fixed width
+                                .padding(30)
+                                .background(
+                                RoundedRectangle(cornerRadius: 10)
+                               .stroke(Color.gray, lineWidth: 1)
+                                )
+                          
+                            
+                           
                         }
-                        .padding()
+                        
+                    }
+                    .padding()
+                }
             }
-
-        }.navigationTitle("Flashcards")
-    }
+        Spacer()
+        }
 }
+
 struct Previews_onboard_Previews: PreviewProvider {
     static var previews: some View {
         /*@START_MENU_TOKEN@*/Text("Hello, World!")/*@END_MENU_TOKEN@*/
