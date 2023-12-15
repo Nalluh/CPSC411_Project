@@ -390,12 +390,9 @@ struct FlashCardDetailView: View {
                             }.padding()
                         }
                     }
-                    
                 }
             }
-            
         }
-
     }
 }
 
@@ -444,12 +441,14 @@ struct TimerView: View {
                             .stroke(Color.black, lineWidth:4))
                             .shadow(radius: 10)
                     //Once the timer is done text will be displayed
-                        .alert("Times up", isPresented: $vm.activeAlert){
+                            .alert("Times up", isPresented: $vm.activeAlert){
                             // when user is prompted we can add some functionality
                             // to button
                             Button("Continue", role: .cancel){
                                 //todo app does something when clicked
                             }
+                        } message: {
+                            Text("You have studied for \(vm.timeStudied):00")
                         }
                     
                     // change value to something not zero
@@ -518,6 +517,8 @@ struct TimerView: View {
                         }
                         if(!vm.isRunning && vm.isPaused) {
                             Text("Paused")
+                                .fontWeight(.bold)
+                            
                         }
                 }.alert(isPresented: $showAlert) {
                     Alert(
@@ -527,7 +528,6 @@ struct TimerView: View {
                     )
                 }
                     NavigationLink(destination: Flashcards(flashCardData: flashCardData), isActive: $clickOnX) {
-                                           
                                         }.hidden()
                 }
                 .onReceive(timer) { _ in

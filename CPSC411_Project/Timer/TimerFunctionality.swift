@@ -6,6 +6,7 @@ extension TimerView{
         @Published var activeAlert = false
         @Published var isPaused = false
         @Published var timer: String
+        @Published var timeStudied: Int = 0
         @Published var mins: Float =  0{
             didSet{// when value for mins is updated
                   // format the time for timer variable
@@ -72,6 +73,7 @@ extension TimerView{
             
             // if the difference == 0 countdown is finished -> update states
             if diffTime <= 0 {
+                self.timeStudied += startTime
                 self.isRunning = false
                 self.timer = "0:00"
                 self.activeAlert = true
@@ -91,6 +93,5 @@ extension TimerView{
             self.timer = String(format: "%d:%02d", minutes, seconds)
             
         }
-        
     }
 }
