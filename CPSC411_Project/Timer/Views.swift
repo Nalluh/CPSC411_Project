@@ -436,11 +436,13 @@ struct TimerView: View {
                     Text("\(vm.timer)")
                         .font(.system(size: 70, weight: .medium,design: .rounded))
                         .padding()
+                        .shadow(color: .black, radius: 5, x: 0, y: 0)
                         .frame(width:width)
                         .background(.thinMaterial)
                         .cornerRadius(20)
                         .overlay(RoundedRectangle(cornerRadius: 20)
                             .stroke(Color.black, lineWidth:4))
+                            .shadow(radius: 10)
                     //Once the timer is done text will be displayed
                         .alert("Times up", isPresented: $vm.activeAlert){
                             // when user is prompted we can add some functionality
@@ -474,13 +476,13 @@ struct TimerView: View {
 
                             }
                         }.tint(.green)
-                        .bold()
+                        .fontWeight(.bold)
                         .disabled(vm.activeAlert)
                         
                         //button to end timer
                         Button("Reset", action: vm.reset)
                             .tint(.red)
-                            .bold()
+                            .fontWeight(.bold)
                     }.frame(width:width)
                             .padding()
                         if(vm.isRunning)
