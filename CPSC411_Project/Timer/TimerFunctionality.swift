@@ -48,6 +48,7 @@ extension TimerView{
             self.mins = Float(startTime)
             //switch state back to false or "off"
             self.isRunning = false
+            self.isPaused = false
             //update timer value
             self.timer = "\(Int(mins)):00"
         }
