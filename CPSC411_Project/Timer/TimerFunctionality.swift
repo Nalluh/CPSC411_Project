@@ -4,6 +4,7 @@ extension TimerView{
     final class ViewModel: ObservableObject{
         @Published var isRunning = false
         @Published var activeAlert = false
+        @Published var isPaused = false
         @Published var timer: String
         @Published var mins: Float =  0{
             didSet{// when value for mins is updated
@@ -35,6 +36,7 @@ extension TimerView{
             self.endingDate = Date()
             // Changes timer status to running
             self.isRunning = true
+            self.isPaused = false
             // Calculates remaining time by adding mins value to current date
             // then counts down
             self.endingDate = Calendar.current.date(byAdding: .minute, value: Int(mins), to: endingDate)!
@@ -51,6 +53,10 @@ extension TimerView{
         }
         
         
+        func pause(){
+            self.isRunning = false
+            self.isPaused = true
+        }
         
         func updateTimer(){
             // if timer is not running just return

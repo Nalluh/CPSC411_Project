@@ -463,22 +463,38 @@ struct TimerView: View {
                     VStack{
                     HStack(spacing: 50){
                         //button to start timer
-                          
-                        Button("Start"){
-                          
-                            if(!flashCardData.flashcards.isEmpty && !vm.isRunning){
+                        if (!vm.isRunning){
+                            Button("Start"){
                                 
-                                clickOnX = true
-                                vm.startTimer(mins: vm.mins)
-                            }
-                            else{
-                                vm.startTimer(mins: vm.mins)
-
-                            }
-                        }.tint(.green)
-                        .fontWeight(.bold)
-                        .disabled(vm.activeAlert)
-                        
+                                if(!flashCardData.flashcards.isEmpty && !vm.isRunning){
+                                    
+                                    clickOnX = true
+                                    vm.startTimer(mins: vm.mins)
+                                }
+                                else{
+                                    vm.startTimer(mins: vm.mins)
+                                    
+                                }
+                            }.tint(.green)
+                                .fontWeight(.bold)
+                                .disabled(vm.activeAlert)
+                        }
+                        else{
+                            Button("Pause"){
+                                
+                                if(!flashCardData.flashcards.isEmpty && !vm.isRunning){
+                                    
+                                    clickOnX = true
+                                    vm.pause()
+                                }
+                                else{
+                                    vm.pause()
+                                    
+                                }
+                            }.tint(.orange)
+                                .fontWeight(.bold)
+                                .disabled(vm.activeAlert)
+                        }
                         //button to end timer
                         Button("Reset", action: vm.reset)
                             .tint(.red)
@@ -497,8 +513,11 @@ struct TimerView: View {
                                 Button("View Flashcards"){
                                 
                                 clickOnX = true
-                            }
+                                }
+                           }
                         }
+                        if(!vm.isRunning && vm.isPaused) {
+                            Text("Paused")
                         }
                 }.alert(isPresented: $showAlert) {
                     Alert(
