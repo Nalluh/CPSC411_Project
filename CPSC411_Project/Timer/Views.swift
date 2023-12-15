@@ -18,6 +18,14 @@ class FlashCardData: ObservableObject {
     
 }
 
+struct CustomGradients {
+    static let customGradient = LinearGradient(
+            gradient: Gradient(colors: [.purple, .blue]),
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+}
+
 //not used for now
 struct OnboardingView: View {
     @State private var name = ""
@@ -64,79 +72,93 @@ struct MenuOptions: View{
     @AppStorage("nightMode") private var nightMode = false
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            NavigationView {
-                VStack{
-                    Text("Welcome. \(name)")
-                        .padding()
-                        .font(.custom("AppleSDGothicNeo-Bold", size: 16))
-                    Text("Dont forget the goal:")
-                        .font(.custom("AppleSDGothicNeo-Bold", size: 16))
-                    Text(goal)
-                        .padding(-1)
-                        .font(.custom("AppleSDGothicNeo-Bold", size: 24))
-                        .bold()
-                    
-                    //this block links to timer
-                    Button(action: {
-                        //when button is clicked variable is set to true
-                        //which makes the condition on NavigationLink become true
-                        //so the view switches
-                        clickOnTimer = true
-                    }) {
-                        Text("Study Area")
-                            .frame(width: 150, height: 20)
+            TabView(selection: $selectedTab) {
+                NavigationView {
+                    VStack {
+                        VStack(alignment: .leading) {
+                            Text("Hey \(name),")
+                                .font(.title)
+                                .padding(.leading, -180)
+                                .font(.custom("AppleSDGothicNeo-Bold", size: 16))
+                            Text("Welcome back.")
+                                .padding(.leading, -180)
+                                .padding(.top, 5)
+                                .font(.custom("AppleSDGothicNeo-Bold", size: 20))
+                        }
+                        .padding(.top, -200)
+                        VStack(alignment: .leading) {
+                            Text("Goal for the day:")
+                                .padding(.leading, -180)
+                                .font(.custom("AppleSDGothicNeo-Bold", size: 26))
+                            Text(goal)
+                                .font(.custom("AppleSDGothicNeo-Bold", size: 20))
+                                .padding(.top, 25)
+                                .padding(.leading, -180)
+                                .bold()
+                        }
+                        //this block links to timer
+                        HStack {
+                            Button(action: {
+                                //when button is clicked variable is set to true
+                                //which makes the condition on NavigationLink become true
+                                //so the view switches
+                                clickOnTimer = true
+                            }) {
+                                Text("Study Area")
+                                    .frame(width: 180, height: 200)
+                                    .padding(.bottom, 1)
+                                    .foregroundColor(.white)
+                                    .background(CustomGradients.customGradient)
+                                    .cornerRadius(10)
+                            }
                             .padding(12)
-                            .background(Color.blue)
-                            .foregroundColor(Color.white)
-                            .cornerRadius(15)
-                    }
-                    .padding(12)
-                    NavigationLink(destination: TimerView(flashCardData: flashCardData), isActive: $clickOnTimer) {
-                        
-                    }.hidden()
-                    // end timer block
-                    
-                    // This block is for flash cards
-                    Button(action: {
-                        
-                        clickOnFlashCard = true
-                    }) {
-                        Text("Create Flashcards")
-                            .frame(width: 150, height: 20)
+                            NavigationLink(destination: TimerView(flashCardData: flashCardData), isActive: $clickOnTimer) {
+                                
+                            }.hidden()
+                            // end timer block
+                            
+                            // This block is for flash cards
+                            
+                            Button(action: {
+                                
+                                clickOnFlashCard = true
+                            }) {
+                                Text("Create Flashcards")
+                                    .frame(width: 180, height: 200)
+                                    .padding(.bottom, 1)
+                                    .foregroundColor(Color.white)
+                                    .background(CustomGradients.customGradient)
+                                    .cornerRadius(10)
+                            }
                             .padding(12)
-                            .background(Color.blue)
-                            .foregroundColor(Color.white)
-                            .cornerRadius(15)
+                            NavigationLink(destination: FlashCardView(flashCardData: flashCardData), isActive: $clickOnFlashCard) {
+                                
+                            }.hidden()
+                            //end flash card block
+                            
+                            
+                            
+                            
+                        }.navigationBarBackButtonHidden(true)
+                        // if buttons looks ugly change this
+                            .shadow(color: .gray, radius: 2, x: 0, y: 0)
                     }
-                    .padding(12)
-                    NavigationLink(destination: FlashCardView(flashCardData: flashCardData), isActive: $clickOnFlashCard) {
-                        
-                    }.hidden()
-                    //end flash card block
-                    
-                    
-                    
-                    
-                }.navigationBarBackButtonHidden(true)
-                // if buttons looks ugly change this
-                    .buttonStyle(.borderedProminent)
-            }
-            .tabItem {
-                Label("Home", systemImage: "book.closed.fill")
-            }
-            .tag(0)
-            
-            SettingsView(nightMode: $nightMode, name: $name, goal: $goal)
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
                 }
-                .tag(1)
+                .tabItem {
+                    Label("Home", systemImage: "book.closed.fill")
+                }
+                .tag(0)
+                
+                SettingsView(nightMode: $nightMode, name: $name, goal: $goal)
+                    .tabItem {
+                        Label("Settings", systemImage: "gearshape.fill")
+                    }
+                    .tag(1)
+            }
+            .navigationBarTitle("")
+            .navigationBarHidden(true)
         }
-        .navigationBarTitle("")
-        .navigationBarHidden(true)
-    }
-        
+    
 }
 
 struct SettingsView: View {
@@ -222,13 +244,10 @@ struct FlashCardView: View {
     @State private var isCreatingNewFlashcard: Bool = false
     @State private var flashcards: [String] = []
     @ObservedObject var flashCardData: FlashCardData = FlashCardData()
-    
- 
+    @State private var showAlertEmpty = false
+    @State private var showAlertExist = false
     
     var body: some View {
-            
-      
-     
         if( !isCreatingNewFlashcard && flashCardData.flashcards.isEmpty) {
                 
                 Section(header: Text("Flashcards")){
@@ -254,20 +273,33 @@ struct FlashCardView: View {
                 
                 Button(action: {
                     var newFlashcardTitle = self.newFlashcardTitle
-
-                                flashCardData.flashcards.append(newFlashcardTitle)
-                                flashCardData.flashView[newFlashcardTitle] = [:]
-
-                    newFlashcardTitle = ""
-                    }) {
+                    if newFlashcardTitle.isEmpty {
+                        showAlertEmpty = true
+                        
+                    } else {
+                        if flashCardData.flashcards.contains(newFlashcardTitle) {
+                            showAlertExist = true
+                        } else {
+                            flashCardData.flashcards.append(newFlashcardTitle)
+                            flashCardData.flashView[newFlashcardTitle] = [:]
+                            
+                            newFlashcardTitle = ""
+                        }}}) {
                     Text("Submit")
                     .buttonStyle(.borderedProminent)
                         }
                     .padding()
+                    .alert(isPresented: $showAlertExist) {
+                                    Alert(
+                                        title: Text("Duplicate Input"),
+                                        message: Text("Input already exist!"),
+                                        dismissButton: .default(Text("OK"))
+                                    )
+                                }
                 List {
                     ForEach(flashCardData.flashcards.indices, id: \.self) { index in
                     NavigationLink(destination: FlashCardDetailView(flashCardData: flashCardData, flashcardIndex: index)) {
-                          Text(flashCardData.flashcards[index])
+                        Text("\(index + 1). \(flashCardData.flashcards[index])")
                                         }
                                     }
                                 }
@@ -285,76 +317,85 @@ struct FlashCardDetailView: View {
     @State private var newQuestion: String = ""
     @State private var newAnswer: String = ""
     var flashcardIndex: Int
+    @State private var studyArea = false
+    @AppStorage("nightMode") private var nightMode = false
+    
 
     var body: some View {
-        VStack {
-            Text("Flashcard Detail")
-                .font(.title)
-
-            Text("Title: \(flashCardData.flashcards[flashcardIndex])")
-                .padding()
-
-            TextField("Enter Flashcard Description", text: $flashCardData.flashcards[flashcardIndex])
-                .textFieldStyle(.roundedBorder)
-                .padding()
-
-            if flashCardData.flashcards.count  != 0 {
-                HStack {
-                    Text("Question")
-                    Spacer()
-                    Text("Answer")
-                }
-                .font(.subheadline)
-                .padding()
-            }
-
-            
-              
-           
-                     if let cards = flashCardData.flashView[flashCardData.flashcards[flashcardIndex]] {
-            
-                             ForEach(cards.sorted(by: { $0.0 < $1.0 }), id: \.key) { key, value in
-                                 HStack {
-                                     Text(key)
-                                     Spacer()
-                                     Text(value)
-                                 }
-                             }
-                         
-                     }
+        ScrollView {
+            VStack(alignment: .leading) {
+                Text("Flashcard Detail")
+                    .font(.title)
+                    .padding()
                 
-            
-        }.padding()
-
-        VStack {
-            HStack {
-                TextField("Enter Question", text: $newQuestion)
+                Spacer()
+                Text("Change Title:")
+                    .padding(.leading, 7)
+                TextField("Enter Flashcard Description", text: $flashCardData.flashcards[flashcardIndex])
                     .textFieldStyle(.roundedBorder)
                     .padding()
-
-                TextField("Enter Answer", text: $newAnswer)
-                    .textFieldStyle(.roundedBorder)
-                    .padding()
-
-                Button(action: {
-                    flashCardData.flashView[flashCardData.flashcards[flashcardIndex]]?.updateValue(newAnswer, forKey: newQuestion)
+                
+                VStack {
+                    Text("Title: \(flashCardData.flashcards[flashcardIndex])")
+                    TextField("Enter Question", text: $newQuestion)
+                        .textFieldStyle(.roundedBorder)
+                        .padding()
                     
+                    TextField("Enter Answer", text: $newAnswer)
+                        .textFieldStyle(.roundedBorder)
+                        .padding()
                     
-                    print(flashCardData.flashView.count)
+                    Button(action: {
+                        flashCardData.flashView[flashCardData.flashcards[flashcardIndex]]?.updateValue(newAnswer, forKey: newQuestion)
+                        
+                        
+                        print(flashCardData.flashView.count)
                         newQuestion = ""
                         newAnswer = ""
-                }) {
-                    Text("Add")
-                        .buttonStyle(.borderedProminent)
+                    }) {
+                        Text("Add")
+                            .buttonStyle(.borderedProminent)
+                            .padding()
+                    }
+                    Text("Flashcard Q/A")
+                        .font(.title)
+                        .padding(.leading, -200)
                 }
-                .padding()
+                
+                if let cards = flashCardData.flashView[flashCardData.flashcards[flashcardIndex]] {
+                    if cards.count != 0 {
+                        Button(action: {
+                            //when button is clicked variable is set to true
+                            //which makes the condition on NavigationLink become true
+                            //so the view switches
+                            studyArea = true
+                        }) {
+                            Text("Go to Study Area")
+                                .padding()
+                        }
+                        NavigationLink(destination: TimerView(flashCardData: flashCardData), isActive: $studyArea) {
+                            
+                        }.hidden()
+                            .padding()
+                    }
+                    ForEach(cards.sorted(by: { $0.0 < $1.0 }), id: \.key) { key, value in
+                        if flashCardData.flashcards.count  != 0 {
+                            VStack (alignment: .leading) {
+                                    VStack{
+                                        Text("Q: \(key)")
+                                    }
+                                    VStack {
+                                        Text("A: \(value)")
+                                    }
+                            }.padding()
+                        }
+                    }
+                    
+                }
             }
-
             
-
-            Spacer()
         }
-        .padding()
+
     }
 }
 
@@ -505,7 +546,7 @@ struct Flashcards: View {
                 List {
                     ForEach(flashCardData.flashcards.indices, id: \.self) { index in
                     NavigationLink(destination: FlashCardDetailViewNoEdit(flashCardData: flashCardData, flashcardIndex: index)) {
-                          Text(flashCardData.flashcards[index])
+                          Text("\(index + 1). \(flashCardData.flashcards[index])")
                                         }
                                     }
                                 }
@@ -520,18 +561,20 @@ struct FlashCardDetailViewNoEdit: View {
     var flashcardIndex: Int = 0
     @State private var flippedKeys: Set<String> = []
     var body: some View {
+        ScrollView {
             if let cards = flashCardData.flashView[flashCardData.flashcards[flashcardIndex]] {
                 Text(flashCardData.flashcards[flashcardIndex])
-               
+                
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(cards.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
                         VStack(alignment: .leading, spacing: 5) {
                             HStack {
-                                Text(flippedKeys.contains(key) ? value : key)
+                                Text(flippedKeys.contains(key) ? "A: \(value)" : "Q: \(key)")
                                     .font(.headline)
                                     .foregroundColor(.blue)
                                     .rotation3DEffect(
-                                        .degrees(flippedKeys.contains(key) ? 360 : 0),
+                                        .degrees(flippedKeys
+                                            .contains(key) ? 360 : 0),
                                         axis: (x: 0.0, y: 1.0, z: 0.0)
                                     )
                                     .onTapGesture {
@@ -545,22 +588,19 @@ struct FlashCardDetailViewNoEdit: View {
                                     }
                             }
                             .frame(maxWidth: .infinity, alignment: .center) // Use .infinity for fixed width
-                                .padding(30)
-                                .background(
+                            .padding(30)
+                            .background(
                                 RoundedRectangle(cornerRadius: 10)
-                               .stroke(Color.gray, lineWidth: 1)
-                                )
-                          
-                            
-                           
+                                    .stroke(Color.gray, lineWidth: 1)
+                            )
                         }
-                        
                     }
                     .padding()
                 }
             }
-        Spacer()
+            Spacer()
         }
+    }
 }
 
 struct Previews_onboard_Previews: PreviewProvider {
