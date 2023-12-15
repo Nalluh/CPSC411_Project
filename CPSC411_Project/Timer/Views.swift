@@ -20,7 +20,7 @@ class FlashCardData: ObservableObject {
 
 struct CustomGradients {
     static let customGradient = LinearGradient(
-            gradient: Gradient(colors: [.purple, .blue]),
+        gradient: Gradient(colors: [.green, .yellow]),
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -404,7 +404,7 @@ struct FlashCardDetailView: View {
 
 
 // add ability to allow user to view flash cards when start button is pressed
-// pass flashcards to timer to view
+// pass flashcards to timer to view	
 struct TimerView: View {
 
     @StateObject private var vm = ViewModel()
@@ -417,10 +417,17 @@ struct TimerView: View {
     private let width: Double = 250
   
     @State private var clickOnX: Bool = false
+    @State private var showAlert: Bool = false
 
     var body: some View {
         
-            VStack{
+        ZStack {
+            LinearGradient(
+                colors: [.green, .yellow],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea(.all)
                 
                 VStack{
                     //Sets default of 5 mins
@@ -433,7 +440,7 @@ struct TimerView: View {
                         .background(.thinMaterial)
                         .cornerRadius(20)
                         .overlay(RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.gray, lineWidth:4))
+                            .stroke(Color.black, lineWidth:4))
                     //Once the timer is done text will be displayed
                         .alert("Times up", isPresented: $vm.activeAlert){
                             // when user is prompted we can add some functionality
@@ -450,7 +457,7 @@ struct TimerView: View {
                         .frame(width:width)
                         .disabled(vm.activeAlert)
                         .animation(.easeInOut, value: vm.mins)
-                        .tint(.gray)
+                        .tint(.black)
                     VStack{
                     HStack(spacing: 50){
                         //button to start timer
@@ -467,19 +474,21 @@ struct TimerView: View {
 
                             }
                         }.tint(.green)
+                        .bold()
                         .disabled(vm.activeAlert)
                         
                         //button to end timer
                         Button("Reset", action: vm.reset)
                             .tint(.red)
+                            .bold()
                     }.frame(width:width)
                             .padding()
                         if(vm.isRunning)
                         {
-                            if(flashCardData.flashcards.count < 2){
-                                Button("View Flashcard"){
+                            if(flashCardData.flashcards.count == 0){
+                                Button("View Flashcards"){
                                     
-                                    clickOnX = true
+                                    showAlert = true
                                 }
                             }
                            else{
@@ -489,6 +498,12 @@ struct TimerView: View {
                             }
                         }
                         }
+                }.alert(isPresented: $showAlert) {
+                    Alert(
+                        title: Text("Flashcard is empty"),
+                        message: Text("Go back and create flashcard"),
+                        dismissButton: .default(Text("OK"))
+                    )
                 }
                     NavigationLink(destination: Flashcards(flashCardData: flashCardData), isActive: $clickOnX) {
                                            
